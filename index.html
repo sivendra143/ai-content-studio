@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CARE Hospitals Vizag - AI Content Studio</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; }
+  body { background: #f4f8fb; min-height: 100vh; }
+  header { background: #0a4d8c; color: #fff; padding: 18px 16px 14px; }
+  header h1 { font-size: 18px; letter-spacing: .4px; color: #ffd166; }
+  header p { font-size: 12px; opacity: .9; margin-top: 3px; }
+  #wrap { padding: 14px 12px 20px; display: flex; flex-direction: column; gap: 12px; }
+  #chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { background: #fff; border: 1.5px solid #0a6e4f; color: #0a6e4f; border-radius: 999px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
+  #status { font-size: 13px; color: #5a7184; min-height: 18px; }
+  #card { display: none; background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 24px rgba(10,77,140,.12); border: 1px solid #dbe7f0; }
+  #imgwrap { position: relative; width: 100%; aspect-ratio: 1/1; background: #dce8f2; overflow: hidden; }
+  #imgwrap img { width: 100%; height: 112%; object-fit: cover; object-position: top; display: block; }
+  #overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 16px 14px; background: linear-gradient(transparent, rgba(6,40,70,.85)); color: #fff; }
+  #overlay h2 { font-size: 19px; line-height: 1.25; }
+  #overlay p { font-size: 12.5px; opacity: .92; margin-top: 4px; }
+  #caption { padding: 14px 16px; font-size: 14px; line-height: 1.55; color: #24384a; white-space: pre-wrap; }
+  #caption .src { display: block; margin-top: 8px; font-size: 11px; color: #7a8fa1; }
+  #copy { display: none; margin: 0 16px 16px; background: #0a6e4f; color: #fff; border: none; border-radius: 999px; padding: 12px; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid #9db8cc; border-top-color: #0a4d8c; border-radius: 50%; animation: sp 0.8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>CARE Hospitals, Visakhapatnam</h1>
+  <p>AI content studio &middot; real posts from real hospital facts, in one tap</p>
+</header>
+<div id="wrap">
+  <div id="chips">
+    <button class="chip" data-t="emergency">24x7 Emergency post</button>
+    <button class="chip" data-t="monsoon">Monsoon health tips</button>
+    <button class="chip" data-t="heart">Heart care awareness</button>
+    <button class="chip" data-t="camp">Health checkup camp</button>
+  </div>
+  <div id="status">Pick a post type - the AI writes and illustrates it live.</div>
+  <div id="card">
+    <div id="imgwrap">
+      <img id="art" alt="">
+      <div id="overlay"><h2 id="headline"></h2><p id="subline"></p></div>
+    </div>
+    <div id="caption"></div>
+  </div>
+  <button id="copy">Copy caption</button>
+</div>
+<script>
+const FACTS = `Real facts about CARE Hospitals Visakhapatnam to ground every post (never invent others):
+- Serving Visakhapatnam since 1999; multidisciplinary super-speciality care.
+- Three units: Ramnagar (Waltair Main Road, phone 0891-6799832, rated 4.6/5 from 4,100+ patient reviews), Health City Arilova (200-bed, 58 doctors, 13 specialities, phone 040 6810 6589), Maharanipeta (KGH Road, phone 0891-3067000).
+- All units open 24x7 with round-the-clock emergency care.`;
+
+const TASKS = {
+  emergency: {
+    brief: 'a public-awareness post telling Vizag families that CARE Hospitals emergency care is open 24x7, all three units',
+    headline: '24x7 Emergency Care, Always Near You',
+    subline: 'Ramnagar - Health City Arilova - Maharanipeta',
+    img: 'modern indian hospital emergency entrance at night, glowing lights, ambulance bay, deep blue tones, photorealistic, professional healthcare photography, no text, no words'
+  },
+  monsoon: {
+    brief: 'a monsoon-season health tips post for Vizag (fever and infection prevention), ending with when to visit a doctor',
+    headline: 'Monsoon Health Tips for Vizag',
+    subline: 'CARE Hospitals - serving Vizag since 1999',
+    img: 'rainy season in an indian coastal city, person with umbrella near a clean modern hospital, fresh green and blue tones, photorealistic, no text, no words'
+  },
+  heart: {
+    brief: 'a heart-health awareness post encouraging timely cardiac checkups, warm and reassuring',
+    headline: 'Your Heart Deserves Attention',
+    subline: 'Cardiac care at CARE Hospitals, Visakhapatnam',
+    img: 'clean medical illustration of a glowing red heart shape with an ECG heartbeat pulse line, soft light gradient background, minimal professional healthcare poster style, no people, no text, no words'
+  },
+  camp: {
+    brief: 'an announcement-style post inviting families for a preventive health checkup camp at CARE Hospitals Visakhapatnam (no invented dates or prices - say "contact your nearest unit")',
+    headline: 'Preventive Health Checkup Camp',
+    subline: 'All three CARE units across Visakhapatnam',
+    img: 'friendly indian family at a bright modern hospital health camp, nurse checking blood pressure, warm natural light, photorealistic, no text, no words'
+  }
+};
+
+const statusEl = document.getElementById('status');
+const card = document.getElementById('card');
+const art = document.getElementById('art');
+const copyBtn = document.getElementById('copy');
+window.stage = 'idle'; // for the recorder: idle | writing | imaging | done
+let currentCaption = '';
+
+async function llm(system, user) {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 4000 * attempt));
+    try {
+      const res = await fetch('https://text.pollinations.ai/openai', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'openai', messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user }
+        ]})
+      });
+      const j = await res.json();
+      const c = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+      if (c && c.trim()) return c.trim().replace(/\*\*/g, '');
+    } catch (e) {}
+  }
+  return null;
+}
+
+async function generate(key) {
+  const t = TASKS[key];
+  window.stage = 'writing';
+  card.style.display = 'none'; copyBtn.style.display = 'none';
+  statusEl.innerHTML = '<span class="spin"></span>AI is writing the post from CARE\'s real facts...';
+  const caption = await llm(
+    FACTS + '\nYou write social media captions for CARE Hospitals Visakhapatnam. Plain text only, no markdown, no hashtags in the middle of sentences. End with 3-4 relevant hashtags. Keep under 60 words, warm and clear. Add one short closing line in Telugu.',
+    'Write ' + t.brief + '. Ground it in the real facts given. Mention the phone numbers where natural.'
+  );
+  if (!caption) { statusEl.textContent = 'Could not reach the AI - tap again to retry.'; window.stage = 'idle'; return; }
+  currentCaption = caption;
+  document.getElementById('headline').textContent = t.headline;
+  document.getElementById('subline').textContent = t.subline;
+  const cap = document.getElementById('caption');
+  cap.innerHTML = caption.replace(/</g, '&lt;') + '<span class="src">Caption and image generated live by AI from CARE Hospitals\' real public details.</span>';
+  card.style.display = 'block';
+  window.stage = 'imaging';
+  statusEl.innerHTML = '<span class="spin"></span>AI is painting the visual...';
+  art.src = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(t.img) + '?width=720&height=720&nologo=true&seed=' + Math.floor(Math.random() * 99999);
+  art.onload = () => { statusEl.textContent = 'Ready - copy the caption and post it.'; window.stage = 'done'; };
+  art.onerror = () => { statusEl.textContent = 'Image failed to load - tap the post type again.'; window.stage = 'done'; };
+  copyBtn.style.display = 'block';
+}
+
+copyBtn.onclick = () => {
+  const ta = document.createElement('textarea');
+  ta.value = currentCaption;
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); copyBtn.textContent = 'Caption copied'; } catch (e) { copyBtn.textContent = 'Select and copy manually'; }
+  document.body.removeChild(ta);
+};
+
+document.querySelectorAll('.chip').forEach(c => c.onclick = () => generate(c.dataset.t));
+</script>
+</body>
+</html>
