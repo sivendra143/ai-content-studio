@@ -2,53 +2,148 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>CARE Hospitals Vizag - AI Content Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; }
-  body { background: #f4f8fb; min-height: 100vh; }
-  header { background: #0a4d8c; color: #fff; padding: 18px 16px 14px; }
-  header h1 { font-size: 18px; letter-spacing: .4px; color: #ffd166; }
-  header p { font-size: 12px; opacity: .9; margin-top: 3px; }
-  #wrap { padding: 14px 12px 20px; display: flex; flex-direction: column; gap: 12px; }
-  #chips { display: flex; gap: 8px; flex-wrap: wrap; }
-  .chip { background: #fff; border: 1.5px solid #0a6e4f; color: #0a6e4f; border-radius: 999px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
-  #status { font-size: 13px; color: #5a7184; min-height: 18px; }
-  #card { display: none; background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 24px rgba(10,77,140,.12); border: 1px solid #dbe7f0; }
-  #imgwrap { position: relative; width: 100%; aspect-ratio: 1/1; background: #dce8f2; overflow: hidden; }
-  #imgwrap img { width: 100%; height: 112%; object-fit: cover; object-position: top; display: block; }
-  #overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 16px 14px; background: linear-gradient(transparent, rgba(6,40,70,.85)); color: #fff; }
-  #overlay h2 { font-size: 19px; line-height: 1.25; }
+  :root { --ink:#0e3a36; --teal:#0f6b5c; --mint:#8fd0bd; --cream:#f2f7f4; --paper:#fdfefa; --line:#d9e6de; }
+  * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body { font-family: 'Inter', sans-serif; background: #0a2a27; color: var(--ink); display: flex; justify-content: center; }
+  .app { width: 100%; max-width: 460px; min-height: 100dvh; background: var(--cream); position: relative; overflow: hidden; box-shadow: 0 0 60px rgba(0,0,0,.5); }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transform: translateX(40px); transition: opacity .35s ease, transform .35s ease; overflow-y: auto; }
+  .screen.on { opacity: 1; pointer-events: auto; transform: none; }
+  .screen.off-left { transform: translateX(-40px); }
+
+  .phead { display: flex; align-items: center; gap: 12px; padding: 16px 18px 10px; }
+  .back { border: 0; background: none; font-size: 20px; color: var(--ink); cursor: pointer; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
+  .back:active { background: rgba(0,0,0,.06); }
+  .back.hidden { visibility: hidden; }
+  .ptext { font-size: 11px; letter-spacing: .14em; font-weight: 600; color: var(--teal); text-transform: uppercase; }
+  .pbar { flex: 1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .pbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--teal), var(--mint)); width: 0%; transition: width .4s ease; border-radius: 2px; }
+
+  .hero { color: #fff; justify-content: flex-end; }
+  .hero .bg { position: absolute; inset: 0; background: linear-gradient(160deg, #0e3a36 0%, #0f6b5c 55%, #128a72 100%); }
+  .hero .bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 82% 18%, rgba(143,208,189,.35), transparent 55%), radial-gradient(circle at 15% 75%, rgba(143,208,189,.22), transparent 50%); }
+  .hero .content { position: relative; padding: 28px 24px 34px; }
+  .eyebrow { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--mint); font-weight: 600; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: 40px; line-height: 1.08; font-weight: 600; margin: 8px 0 4px; }
+  .hero h1 em { font-style: italic; color: var(--mint); }
+  .hero .sub { font-size: 14px; color: rgba(255,255,255,.88); margin-bottom: 20px; }
+  .promise { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .promise span { font-size: 13px; color: rgba(255,255,255,.85); display: flex; gap: 9px; align-items: center; }
+  .promise b { color: var(--mint); font-weight: 600; }
+
+  .btn { width: 100%; border: 0; border-radius: 14px; padding: 16px; font-size: 15.5px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: transform .12s ease, box-shadow .2s ease, opacity .2s; }
+  .btn:active { transform: scale(.975); }
+  .btn.teal { background: linear-gradient(120deg, #eafaf3, #ffffff); color: var(--ink); box-shadow: 0 8px 22px rgba(0,0,0,.25); }
+  .btn.solid { background: linear-gradient(120deg, var(--teal), #159078); color: #fff; box-shadow: 0 8px 22px rgba(15,107,92,.35); }
+  .btn:disabled { opacity: .4; box-shadow: none; }
+
+  .q { padding: 6px 22px 26px; display: flex; flex-direction: column; flex: 1; }
+  .q h2 { font-family: 'Playfair Display', serif; font-size: 27px; font-weight: 600; line-height: 1.2; margin: 6px 0 4px; }
+  .q .hint { font-size: 13.5px; color: #6e7d74; margin-bottom: 22px; }
+  .opts { display: flex; flex-direction: column; gap: 12px; }
+  .opt { display: flex; align-items: center; gap: 14px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 16px; padding: 17px 16px; cursor: pointer; text-align: left; font-family: 'Inter', sans-serif; transition: transform .12s ease, border-color .2s, box-shadow .2s; }
+  .opt:active { transform: scale(.98); }
+  .opt.picked { border-color: var(--teal); box-shadow: 0 6px 18px rgba(15,107,92,.18); }
+  .opt .ic { width: 42px; height: 42px; border-radius: 12px; background: #e2f2eb; display: grid; place-items: center; flex-shrink: 0; }
+  .opt .ic svg { width: 22px; height: 22px; stroke: var(--teal); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .opt .t { font-size: 15.5px; font-weight: 600; display: block; }
+  .opt .d { font-size: 12.5px; color: #7d8a81; margin-top: 2px; display: block; }
+  .q .grow { flex: 1; }
+
+  .load { align-items: center; justify-content: center; text-align: center; padding: 30px; }
+  .ring { width: 62px; height: 62px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--teal); animation: spin 1s linear infinite; margin-bottom: 26px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .load h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 600; margin-bottom: 10px; }
+  .load p { font-size: 13.5px; color: #6e7d74; max-width: 270px; line-height: 1.55; min-height: 42px; transition: opacity .3s; }
+
+  .res { padding: 6px 18px 30px; }
+  .res h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; padding: 4px 4px 2px; }
+  .res .sub { font-size: 13px; color: #6e7d74; padding: 0 4px 16px; }
+  .rcard { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin-bottom: 14px; opacity: 0; transform: translateY(14px); animation: rise .5s ease forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  .imgwrap { position: relative; overflow: hidden; aspect-ratio: 1/1; background: #dfeae4; }
+  .imgwrap img { width: 100%; height: 114%; display: block; object-fit: cover; object-position: top; opacity: 0; transition: opacity .6s; }
+  .imgwrap img.ld { opacity: 1; }
+  .shimmer { position: absolute; inset: 0; background: linear-gradient(100deg, #dfeae4 30%, #eef6f1 50%, #dfeae4 70%); background-size: 200% 100%; animation: shim 1.4s infinite; display: grid; place-items: center; }
+  @keyframes shim { to { background-position: -200% 0; } }
+  .shimmer span { font-size: 12.5px; color: #6e7d74; background: rgba(253,254,250,.88); padding: 7px 13px; border-radius: 999px; }
+  .badge { position: absolute; top: 10px; left: 10px; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; padding: 5px 10px; border-radius: 999px; background: rgba(253,254,250,.88); color: var(--teal); z-index: 2; }
+  #overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 42px 16px 14px; background: linear-gradient(transparent, rgba(8,42,39,.88)); color: #fff; z-index: 1; }
+  #overlay h2 { font-size: 19px; line-height: 1.25; font-family: 'Playfair Display', serif; }
   #overlay p { font-size: 12.5px; opacity: .92; margin-top: 4px; }
-  #caption { padding: 14px 16px; font-size: 14px; line-height: 1.55; color: #24384a; white-space: pre-wrap; }
-  #caption .src { display: block; margin-top: 8px; font-size: 11px; color: #7a8fa1; }
-  #copy { display: none; margin: 0 16px 16px; background: #0a6e4f; color: #fff; border: none; border-radius: 999px; padding: 12px; font-size: 14.5px; font-weight: 600; cursor: pointer; }
-  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid #9db8cc; border-top-color: #0a4d8c; border-radius: 50%; animation: sp 0.8s linear infinite; vertical-align: -2px; margin-right: 6px; }
-  @keyframes sp { to { transform: rotate(360deg); } }
+  #caption { padding: 14px 16px; font-size: 14px; line-height: 1.6; color: #24382f; white-space: pre-wrap; }
+  #caption .src { display: block; margin-top: 9px; font-size: 11px; color: #8a978f; }
+  .copybtn { display: block; width: calc(100% - 32px); margin: 0 16px 16px; background: linear-gradient(120deg, var(--teal), #159078); color: #fff; border: none; border-radius: 12px; padding: 13px; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .hitl { font-size: 12px; color: #7d8a81; text-align: center; line-height: 1.5; padding: 2px 10px 0; }
+  .again { display: block; margin: 6px auto 0; background: none; border: 0; color: var(--teal); font-size: 13.5px; font-weight: 600; cursor: pointer; padding: 10px; font-family: 'Inter', sans-serif; }
+  .fine { font-size: 11px; color: #9aa69e; padding: 10px 6px 8px; line-height: 1.55; text-align: center; }
 </style>
 </head>
 <body>
-<header>
-  <h1>CARE Hospitals, Visakhapatnam</h1>
-  <p>AI content studio &middot; real posts from real hospital facts, in one tap</p>
-</header>
-<div id="wrap">
-  <div id="chips">
-    <button class="chip" data-t="emergency">24x7 Emergency post</button>
-    <button class="chip" data-t="monsoon">Monsoon health tips</button>
-    <button class="chip" data-t="heart">Heart care awareness</button>
-    <button class="chip" data-t="camp">Health checkup camp</button>
-  </div>
-  <div id="status">Pick a post type - the AI writes and illustrates it live.</div>
-  <div id="card">
-    <div id="imgwrap">
-      <img id="art" alt="">
-      <div id="overlay"><h2 id="headline"></h2><p id="subline"></p></div>
+<div class="app">
+
+  <section class="screen hero on" id="s0">
+    <div class="bg"></div>
+    <div class="content">
+      <div class="eyebrow">CARE Hospitals, Visakhapatnam</div>
+      <h1>AI <em>Content</em> Studio</h1>
+      <p class="sub">A finished post in about a minute, from real hospital facts.</p>
+      <div class="promise">
+        <span><b>1</b> Pick what the post is about</span>
+        <span><b>2</b> AI writes and paints it, live, from real details</span>
+        <span><b>3</b> The hospital team reviews before anything is posted</span>
+      </div>
+      <button class="btn teal" id="start">Create a post</button>
     </div>
-    <div id="caption"></div>
-  </div>
-  <button id="copy">Copy caption</button>
+  </section>
+
+  <section class="screen" id="s1">
+    <div class="phead"><button class="back hidden">&#8592;</button><div class="ptext">Step 1 of 1</div><div class="pbar"><i style="width:50%"></i></div></div>
+    <div class="q">
+      <h2>What should the post be about?</h2>
+      <p class="hint">Tap one - the AI writes and illustrates it live.</p>
+      <div class="opts" id="topics">
+        <button class="opt" data-t="emergency"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span><span><span class="t">24x7 Emergency care</span><span class="d">Tell Vizag families help is always near</span></span></button>
+        <button class="opt" data-t="monsoon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3a7 7 0 0 1 7 7H5a7 7 0 0 1 7-7zM12 3v2M6 14l-1 4M12 14l-1 4M18 14l-1 4"/></svg></span><span><span class="t">Monsoon health tips</span><span class="d">Seasonal fever and infection prevention</span></span></button>
+        <button class="opt" data-t="heart"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"/></svg></span><span><span class="t">Heart care awareness</span><span class="d">Encourage timely cardiac checkups</span></span></button>
+        <button class="opt" data-t="camp"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg></span><span><span class="t">Health checkup camp</span><span class="d">Invite families for a preventive checkup</span></span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen load" id="s2">
+    <div class="ring"></div>
+    <h2>Creating your post</h2>
+    <p id="loadmsg">Writing the caption from CARE's real details...</p>
+  </section>
+
+  <section class="screen" id="s3">
+    <div class="phead"><button class="back hidden">&#8592;</button><div class="ptext">Your post</div><div class="pbar"><i style="width:100%"></i></div></div>
+    <div class="res">
+      <h2>Ready to post</h2>
+      <p class="sub">Written and painted live, from CARE's real public details.</p>
+      <div class="rcard" style="animation-delay:.05s">
+        <div class="imgwrap">
+          <span class="badge">AI IMPRESSION</span>
+          <div class="shimmer" id="shim"><span>Painting the visual...</span></div>
+          <img id="art" alt="AI impression for the post">
+          <div id="overlay"><h2 id="headline"></h2><p id="subline"></p></div>
+        </div>
+        <div id="caption"></div>
+        <button class="copybtn" id="copy">Copy caption</button>
+      </div>
+      <div class="hitl">AI drafts. A real person on the CARE team reviews and posts.</div>
+      <button class="again" id="again">Create another post</button>
+      <div class="fine">Caption and image generated live by AI from CARE Hospitals' real public details. The painting is an AI impression, not a hospital photograph.</div>
+    </div>
+  </section>
 </div>
+
 <script>
 const FACTS = `Real facts about CARE Hospitals Visakhapatnam to ground every post (never invent others):
 - Serving Visakhapatnam since 1999; multidisciplinary super-speciality care.
@@ -82,12 +177,19 @@ const TASKS = {
   }
 };
 
-const statusEl = document.getElementById('status');
-const card = document.getElementById('card');
-const art = document.getElementById('art');
-const copyBtn = document.getElementById('copy');
-window.stage = 'idle'; // for the recorder: idle | writing | imaging | done
+window.stage = 'idle';
 let currentCaption = '';
+const $ = s => document.querySelector(s);
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    if (s.id === id) { s.classList.remove('off-left'); s.classList.add('on'); }
+    else if (s.classList.contains('on')) { s.classList.remove('on'); s.classList.add('off-left'); }
+    else { s.classList.remove('on', 'off-left'); }
+  });
+}
+$('#start').onclick = () => show('s1');
+$('#again').onclick = () => { window.stage = 'idle'; show('s1'); };
 
 async function llm(system, user) {
   for (let attempt = 0; attempt < 8; attempt++) {
@@ -108,39 +210,54 @@ async function llm(system, user) {
   return null;
 }
 
+let loadTimer = null;
 async function generate(key) {
   const t = TASKS[key];
   window.stage = 'writing';
-  card.style.display = 'none'; copyBtn.style.display = 'none';
-  statusEl.innerHTML = '<span class="spin"></span>AI is writing the post from CARE\'s real facts...';
+  show('s2');
+  const msgs = ['Writing the caption from CARE\'s real details...', 'Checking the three units and phone numbers...', 'Adding a Telugu closing line...'];
+  let mi = 0;
+  $('#loadmsg').textContent = msgs[0];
+  loadTimer = setInterval(() => { mi = (mi + 1) % msgs.length; $('#loadmsg').textContent = msgs[mi]; }, 1800);
   const caption = await llm(
     FACTS + '\nYou write social media captions for CARE Hospitals Visakhapatnam. Plain text only, no markdown, no hashtags in the middle of sentences. End with 3-4 relevant hashtags. Keep under 60 words, warm and clear. Add one short closing line in Telugu.',
     'Write ' + t.brief + '. Ground it in the real facts given. Mention the phone numbers where natural.'
   );
-  if (!caption) { statusEl.textContent = 'Could not reach the AI - tap again to retry.'; window.stage = 'idle'; return; }
+  if (!caption) { clearInterval(loadTimer); $('#loadmsg').textContent = 'Could not reach the AI - go back and tap again.'; window.stage = 'idle'; return; }
   currentCaption = caption;
-  document.getElementById('headline').textContent = t.headline;
-  document.getElementById('subline').textContent = t.subline;
-  const cap = document.getElementById('caption');
-  cap.innerHTML = caption.replace(/</g, '&lt;') + '<span class="src">Caption and image generated live by AI from CARE Hospitals\' real public details.</span>';
-  card.style.display = 'block';
+  $('#headline').textContent = t.headline;
+  $('#subline').textContent = t.subline;
+  $('#caption').innerHTML = caption.replace(/</g, '&lt;') + '<span class="src">Caption and image generated live by AI from CARE Hospitals\' real public details.</span>';
+  const art = $('#art');
+  art.classList.remove('ld'); art.style.opacity = 0;
+  $('#shim').style.display = 'grid';
+  show('s3');
   window.stage = 'imaging';
-  statusEl.innerHTML = '<span class="spin"></span>AI is painting the visual...';
-  art.src = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(t.img) + '?width=720&height=720&nologo=true&seed=' + Math.floor(Math.random() * 99999);
-  art.onload = () => { statusEl.textContent = 'Ready - copy the caption and post it.'; window.stage = 'done'; };
-  art.onerror = () => { statusEl.textContent = 'Image failed to load - tap the post type again.'; window.stage = 'done'; };
-  copyBtn.style.display = 'block';
+  $('#shim span').textContent = 'Painting the visual...';
+  await new Promise(res => {
+    art.onload = res; art.onerror = res;
+    art.src = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(t.img) + '?width=720&height=720&nologo=true&seed=' + Math.floor(Math.random() * 99999);
+  });
+  clearInterval(loadTimer);
+  $('#shim').style.display = 'none';
+  art.style.opacity = 1; art.classList.add('ld');
+  window.stage = 'done';
 }
 
-copyBtn.onclick = () => {
-  const ta = document.createElement('textarea');
-  ta.value = currentCaption;
-  document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); copyBtn.textContent = 'Caption copied'; } catch (e) { copyBtn.textContent = 'Select and copy manually'; }
-  document.body.removeChild(ta);
+$('#copy').onclick = async () => {
+  try { await navigator.clipboard.writeText(currentCaption); } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = currentCaption; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e2) {}
+    document.body.removeChild(ta);
+  }
+  $('#copy').textContent = 'Caption copied';
 };
-
-document.querySelectorAll('.chip').forEach(c => c.onclick = () => generate(c.dataset.t));
+document.querySelectorAll('#topics .opt').forEach(c => c.onclick = () => {
+  document.querySelectorAll('#topics .opt').forEach(x => x.classList.remove('picked'));
+  c.classList.add('picked');
+  setTimeout(() => generate(c.dataset.t), 300);
+});
 </script>
 </body>
 </html>
